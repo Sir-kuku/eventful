@@ -1,11 +1,11 @@
+import mongoose from 'mongoose';
 import { Event } from '../models/Event.model';
-import { FilterQuery } from 'mongoose';
 import { redis } from '../config/redis';
 
 const invalidateEventCache = async (eventId?: string) => {
-  await redis.del('cache:/api/v1/events'); // list
+  await redis.del('cache:/api/v1/events');
   if (eventId) {
-    await redis.del(`cache:/api/v1/events/${eventId}`); // single
+    await redis.del(`cache:/api/v1/events/${eventId}`);
   }
   console.log('?? Event cache invalidated due to data change.');
 };
@@ -17,7 +17,8 @@ export const createEvent = async (data: any, creatorId: string) => {
 };
 
 export const getAllEvents = async (filters: any, page = 1, limit = 10) => {
-  const query: FilterQuery<any> = {};
+  const query: mongoose.FilterQuery<any> = {};
+
   if (filters.category) query.category = filters.category;
   if (filters.location) query.location = { $regex: filters.location, $options: 'i' };
   if (filters.is_active !== undefined) query.is_active = filters.is_active === 'true';
@@ -27,9 +28,11 @@ export const getAllEvents = async (filters: any, page = 1, limit = 10) => {
       { description: { $regex: filters.search, $options: 'i' } }
     ];
   }
+
   const skip = (page - 1) * limit;
   const events = await Event.find(query).populate('created_by', 'name email').skip(skip).limit(limit).sort({ createdAt: -1 });
   const total = await Event.countDocuments(query);
+
   return { events, total, page, limit };
 };
 
@@ -39,8 +42,12 @@ export const getEventById = async (eventId: string) => {
 };
 
 export const updateEvent = async (eventId: string, userId: string, data: any) => {
-  const event = await Event.findOne({ _id: eventId, created_by: userId });
+  const event = await Event.findOne({ 
+    _id: new mongoose.Types.ObjectId(eventId), 
+    created_by: new mongoose.Types.ObjectId(userId) 
+  });
   if (!event) return null;
+
   Object.assign(event, data);
   await event.save();
   await invalidateEventCache(eventId);
@@ -48,7 +55,10 @@ export const updateEvent = async (eventId: string, userId: string, data: any) =>
 };
 
 export const deleteEvent = async (eventId: string, userId: string) => {
-  const event = await Event.findOneAndDelete({ _id: eventId, created_by: userId });
+  const event = await Event.findOneAndDelete({ 
+    _id: new mongoose.Types.ObjectId(eventId), 
+    created_by: new mongoose.Types.ObjectId(userId) 
+  });
   if (event) {
     await invalidateEventCache(eventId);
   }

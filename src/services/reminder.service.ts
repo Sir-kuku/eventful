@@ -1,30 +1,31 @@
+import mongoose from 'mongoose';
 import { Reminder } from '../models/Reminder.model';
 import { Event } from '../models/Event.model';
 import { Ticket } from '../models/Ticket.model';
 import { User } from '../models/User.model';
 import { sendReminderEmail } from './email.service';
 
-// ?? NEW: Set a reminder for an eventee
 export const setReminder = async (userId: string, eventId: string, reminderTime: Date) => {
-  // 1. Check if the event actually exists
   const event = await Event.findById(eventId);
   if (!event) throw new Error('Event not found');
 
-  // 2. Check if the user has actually bought a ticket for this event
-  const ticket = await Ticket.findOne({ event_id: eventId, eventee_id: userId });
+  const ticket = await Ticket.findOne({ 
+    event_id: new mongoose.Types.ObjectId(eventId), 
+    eventee_id: new mongoose.Types.ObjectId(userId) 
+  });
   if (!ticket) throw new Error('You must purchase a ticket for this event before setting a reminder.');
 
-  // 3. Check if a reminder already exists for this user/event pair
-  const existingReminder = await Reminder.findOne({ user_id: userId, event_id: eventId });
+  const existingReminder = await Reminder.findOne({ 
+    user_id: new mongoose.Types.ObjectId(userId), 
+    event_id: new mongoose.Types.ObjectId(eventId) 
+  });
   if (existingReminder) {
-    // Update the existing reminder time
     existingReminder.reminder_time = reminderTime;
-    existingReminder.is_sent = false; // Reset sent status if time is changed
+    existingReminder.is_sent = false;
     await existingReminder.save();
     return existingReminder;
   }
 
-  // 4. Create a new reminder
   const reminder = await Reminder.create({
     user_id: userId,
     event_id: eventId,
@@ -34,11 +35,9 @@ export const setReminder = async (userId: string, eventId: string, reminderTime:
   return reminder;
 };
 
-// EXISTING: Process reminders for the Cron Job
 export const processReminders = async () => {
   const now = new Date();
   
-  // Find unsent reminders scheduled for now or in the past
   const pendingReminders = await Reminder.find({
     is_sent: false,
     reminder_time: { $lte: now }
@@ -53,7 +52,6 @@ export const processReminders = async () => {
 
       if (!user || !event) continue;
 
-      // Send the email
       await sendReminderEmail(
         user.email,
         event.title,
@@ -61,7 +59,6 @@ export const processReminders = async () => {
         event.location
       );
 
-      // Mark as sent
       reminder.is_sent = true;
       reminder.sent_at = new Date();
       await reminder.save();

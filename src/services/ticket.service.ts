@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import mongoose from 'mongoose';
 import { Ticket } from '../models/Ticket.model';
 import { Payment } from '../models/Payment.model';
 import { Event } from '../models/Event.model';
@@ -15,6 +16,10 @@ export const generateTicket = async (paymentId: string) => {
   if (!event || !event.is_active) throw new Error('Event is no longer available.');
   if (event.tickets_sold >= event.total_tickets) throw new Error('Event is sold out.');
 
+  // Cast populated objects to avoid TypeScript strict checking errors
+  const eventId = (payment.event_id as any)._id;
+  const userId = (payment.user_id as any)._id;
+
   const qrData = JSON.stringify({
     ticketId: payment._id.toString(),
     eventId: payment.event_id.toString(),
@@ -23,10 +28,9 @@ export const generateTicket = async (paymentId: string) => {
 
   const qrCodeBase64 = await QRCode.toDataURL(qrData);
 
-  // ? FIXED: Use ._id to prevent Mongoose embedding the document
   const newTicket = await Ticket.create({
-    event_id: payment.event_id._id,
-    eventee_id: payment.user_id._id,
+    event_id: eventId,
+    eventee_id: userId,
     qr_code: qrCodeBase64,
     is_scanned: false,
   });
