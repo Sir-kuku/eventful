@@ -1,4 +1,4 @@
-import mongoose, { FilterQuery } from 'mongoose'; // ? Explicit import
+import mongoose from 'mongoose';
 import { Event } from '../models/Event.model';
 import { redis } from '../config/redis';
 
@@ -15,7 +15,9 @@ export const createEvent = async (data: any, creatorId: string) => {
 };
 
 export const getAllEvents = async (filters: any, page = 1, limit = 10) => {
-  const query: FilterQuery<any> = {}; // ? Direct usage without namespace
+  // ? PERMANENT FIX: Bypass strict Mongoose 8 typing entirely
+  const query: any = {}; 
+
   if (filters.category) query.category = filters.category;
   if (filters.location) query.location = { $regex: filters.location, $options: 'i' };
   if (filters.is_active !== undefined) query.is_active = filters.is_active === 'true';

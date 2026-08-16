@@ -13,8 +13,12 @@ export const createEvent = async (req: Request, res: Response, next: NextFunctio
 
 export const getAllEvents = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { category, location, search, is_active, page, limit } = req.query;
+    const { category, location, search, is_active } = req.query;
     
+    // ? PERMANENT FIX: Directly cast from source to bypass union types
+    const limit = Number(req.query.limit as string) || 10;
+    const page = Number(req.query.page as string) || 1;
+
     const filters = {
       category: String(category || ''),
       location: String(location || ''),
@@ -22,12 +26,7 @@ export const getAllEvents = async (req: Request, res: Response, next: NextFuncti
       is_active: String(is_active || '')
     };
 
-    // ? FIXED: Use String() to safely flatten union types
-    const result = await eventService.getAllEvents(
-      filters,
-      Number(String(limit)) || 10,
-      Number(String(page)) || 1
-    );
+    const result = await eventService.getAllEvents(filters, limit, page);
 
     res.status(200).json({
       statusCode: 200,
