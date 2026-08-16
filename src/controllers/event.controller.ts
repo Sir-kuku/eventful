@@ -15,7 +15,6 @@ export const getAllEvents = async (req: Request, res: Response, next: NextFuncti
   try {
     const { category, location, search, is_active, page, limit } = req.query;
     
-    // Flatten union types (string | string[]) safely with String()
     const filters = {
       category: String(category || ''),
       location: String(location || ''),
@@ -25,8 +24,8 @@ export const getAllEvents = async (req: Request, res: Response, next: NextFuncti
 
     const result = await eventService.getAllEvents(
       filters,
-      Number(limit) || 10,
-      Number(page) || 1
+      Number(limit as string) || 10, // ? Explicit string cast
+      Number(page as string) || 1    // ? Explicit string cast
     );
 
     res.status(200).json({

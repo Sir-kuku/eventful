@@ -1,4 +1,4 @@
-import mongoose, { FilterQuery } from 'mongoose';
+import mongoose from 'mongoose';
 import { Event } from '../models/Event.model';
 import { redis } from '../config/redis';
 
@@ -15,7 +15,7 @@ export const createEvent = async (data: any, creatorId: string) => {
 };
 
 export const getAllEvents = async (filters: any, page = 1, limit = 10) => {
-  const query: FilterQuery<any> = {};
+  const query: mongoose.FilterQuery<any> = {}; // ? Namespace-safe
   if (filters.category) query.category = filters.category;
   if (filters.location) query.location = { $regex: filters.location, $options: 'i' };
   if (filters.is_active !== undefined) query.is_active = filters.is_active === 'true';

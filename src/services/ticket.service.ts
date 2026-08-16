@@ -19,7 +19,6 @@ export const generateTicket = async (paymentId: string) => {
   });
   const qrCodeBase64 = await QRCode.toDataURL(qrData);
 
-  // Cast to 'any' to bypass Mongoose 8 strict overload bug permanently
   const newTicket = await Ticket.create({
     event_id: payment.event_id.toString(),
     eventee_id: payment.user_id.toString(),
@@ -35,7 +34,8 @@ export const generateTicket = async (paymentId: string) => {
   newTicket.qr_code = await QRCode.toDataURL(updatedQrData);
   await newTicket.save();
 
-  payment.ticket_id = newTicket._id;
+  // ? Cast to 'any' to permanently silence Mongoose 8's strict ObjectId mismatch
+  payment.ticket_id = newTicket._id as any;
   payment.status = 'success';
   await payment.save();
 
