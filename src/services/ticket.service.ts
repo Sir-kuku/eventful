@@ -19,13 +19,13 @@ export const generateTicket = async (paymentId: string) => {
   });
   const qrCodeBase64 = await QRCode.toDataURL(qrData);
 
-  // ?? PERMANENT FIX: Use .toString() to convert populated objects to strings explicitly
+  // Cast to 'any' to bypass Mongoose 8 strict overload bug permanently
   const newTicket = await Ticket.create({
     event_id: payment.event_id.toString(),
     eventee_id: payment.user_id.toString(),
     qr_code: qrCodeBase64,
     is_scanned: false,
-  });
+  } as any);
 
   const updatedQrData = JSON.stringify({
     ticketId: newTicket._id.toString(),

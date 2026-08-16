@@ -14,18 +14,19 @@ export const createEvent = async (req: Request, res: Response, next: NextFunctio
 export const getAllEvents = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { category, location, search, is_active, page, limit } = req.query;
-    // Cast query params safely
+    
+    // Flatten union types (string | string[]) safely with String()
     const filters = {
-      category: category as string,
-      location: location as string,
-      search: search as string,
-      is_active: is_active as string
+      category: String(category || ''),
+      location: String(location || ''),
+      search: String(search || ''),
+      is_active: String(is_active || '')
     };
 
     const result = await eventService.getAllEvents(
       filters,
-      Number(page as string) || 1,
-      Number(limit as string) || 10
+      Number(limit) || 10,
+      Number(page) || 1
     );
 
     res.status(200).json({
