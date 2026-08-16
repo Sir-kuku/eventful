@@ -2,8 +2,8 @@
   "name": "eventful",
   "version": "1.0.0",
   "engines": {
-  "node": "22.x"
- },
+    "node": "22.x"
+  },
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -17,6 +17,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@paystack/paystack-sdk": "^1.0.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -30,6 +31,7 @@
     "node-cron": "^4.6.0",
     "nodemailer": "^9.0.5",
     "qrcode": "^1.5.4",
+    "resend": "^6.20.0",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1"
   },
@@ -38,15 +40,21 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/express-rate-limit": "*",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mongoose": "*",
     "@types/node": "^26.2.0",
     "@types/node-cron": "*",
     "@types/nodemailer": "*",
     "@types/qrcode": "*",
+    "@types/supertest": "^7.2.1",
     "@types/swagger-jsdoc": "*",
     "@types/swagger-ui-express": "*",
+    "jest": "^30.4.2",
     "nodemon": "*",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.12",
+    "ts-node": "^10.9.2",
     "tsx": "*",
     "typescript": "^5.4.5"
   }
