@@ -1,36 +1,28 @@
 import QRCode from 'qrcode';
-import mongoose from 'mongoose';
 import { Ticket } from '../models/Ticket.model';
 import { Payment } from '../models/Payment.model';
 import { Event } from '../models/Event.model';
-import { User } from '../models/User.model';
 import { sendPurchaseConfirmationEmail } from './email.service';
 
 export const generateTicket = async (paymentId: string) => {
   const payment = await Payment.findById(paymentId).populate('event_id user_id');
-  if (!payment || payment.status === 'success') {
-    throw new Error('Payment not found or already processed');
-  }
+  if (!payment || payment.status === 'success') throw new Error('Payment not found or already processed');
 
   const event = await Event.findById(payment.event_id);
   if (!event || !event.is_active) throw new Error('Event is no longer available.');
   if (event.tickets_sold >= event.total_tickets) throw new Error('Event is sold out.');
-
-  // Cast populated objects to avoid TypeScript strict checking errors
-  const eventId = (payment.event_id as any)._id;
-  const userId = (payment.user_id as any)._id;
 
   const qrData = JSON.stringify({
     ticketId: payment._id.toString(),
     eventId: payment.event_id.toString(),
     eventeeId: payment.user_id.toString(),
   });
-
   const qrCodeBase64 = await QRCode.toDataURL(qrData);
 
+  // Mongoose can handle the populated ObjectIds directly here
   const newTicket = await Ticket.create({
-    event_id: eventId,
-    eventee_id: userId,
+    event_id: payment.event_id,
+    eventee_id: payment.user_id,
     qr_code: qrCodeBase64,
     is_scanned: false,
   });
@@ -56,10 +48,7 @@ export const generateTicket = async (paymentId: string) => {
     try {
       await sendPurchaseConfirmationEmail(user.email, event.title, newTicket.qr_code);
       console.log(`? Confirmation email sent to ${user.email} for event ${event.title}`);
-    } catch (emailError) {
-      console.error('?? Failed to send confirmation email, but ticket was generated:', emailError);
-    }
+    } catch (emailError) { console.error('?? Failed to send email, but ticket was generated:', emailError); }
   }
-
   return { ticket: newTicket, payment, event };
 };
