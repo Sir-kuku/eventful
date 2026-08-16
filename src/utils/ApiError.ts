@@ -6,8 +6,7 @@ class ApiError extends Error {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = isOperational;
-    Error.captureStackTrace(this, this.constructor);
-  }
+(Error as any).captureStackTrace(this, this.constructor);  }
 }
 
 export default ApiError;
