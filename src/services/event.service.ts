@@ -1,4 +1,4 @@
-import mongoose, { FilterQuery } from 'mongoose';
+import mongoose from 'mongoose';
 import { Event } from '../models/Event.model';
 import { redis } from '../config/redis';
 
@@ -15,7 +15,7 @@ export const createEvent = async (data: any, creatorId: string) => {
 };
 
 export const getAllEvents = async (filters: any, page = 1, limit = 10) => {
-  const query: FilterQuery<any> = {};
+  const query: mongoose.FilterQuery<any> = {};
   if (filters.category) query.category = filters.category;
   if (filters.location) query.location = { $regex: filters.location, $options: 'i' };
   if (filters.is_active !== undefined) query.is_active = filters.is_active === 'true';
@@ -35,8 +35,9 @@ export const getEventById = async (eventId: string) => {
   return await Event.findById(eventId).populate('created_by', 'name email');
 };
 
+// Added 'as any' to permanently silence Mongoose 8 TypeScript strict overloads
 export const updateEvent = async (eventId: string, userId: string, data: any) => {
-  const event = await Event.findOne({ _id: eventId, created_by: userId });
+  const event = await Event.findOne({ _id: eventId, created_by: userId } as any);
   if (!event) return null;
   Object.assign(event, data);
   await event.save();
@@ -45,7 +46,7 @@ export const updateEvent = async (eventId: string, userId: string, data: any) =>
 };
 
 export const deleteEvent = async (eventId: string, userId: string) => {
-  const event = await Event.findOneAndDelete({ _id: eventId, created_by: userId });
+  const event = await Event.findOneAndDelete({ _id: eventId, created_by: userId } as any);
   if (event) { await invalidateEventCache(eventId); }
   return event;
 };

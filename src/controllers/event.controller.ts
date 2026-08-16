@@ -14,8 +14,7 @@ export const createEvent = async (req: Request, res: Response, next: NextFunctio
 export const getAllEvents = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { category, location, search, is_active, page, limit } = req.query;
-    
-    // Cast query params to strings to satisfy TypeScript strict-mode
+    // Cast query params safely
     const filters = {
       category: category as string,
       location: location as string,

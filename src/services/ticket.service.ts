@@ -19,10 +19,10 @@ export const generateTicket = async (paymentId: string) => {
   });
   const qrCodeBase64 = await QRCode.toDataURL(qrData);
 
-  // Mongoose can handle the populated ObjectIds directly here
+  // ?? PERMANENT FIX: Use .toString() to convert populated objects to strings explicitly
   const newTicket = await Ticket.create({
-    event_id: payment.event_id,
-    eventee_id: payment.user_id,
+    event_id: payment.event_id.toString(),
+    eventee_id: payment.user_id.toString(),
     qr_code: qrCodeBase64,
     is_scanned: false,
   });
