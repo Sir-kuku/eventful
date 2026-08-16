@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import { Event } from '../models/Event.model';
 import { redis } from '../config/redis';
 
@@ -15,7 +14,7 @@ export const createEvent = async (data: any, creatorId: string) => {
 };
 
 export const getAllEvents = async (filters: any, page = 1, limit = 10) => {
-  // ? PERMANENT FIX: Bypass strict Mongoose 8 typing entirely
+  // ? 'any' completely bypasses Mongoose 8's FilterQuery strictness
   const query: any = {}; 
 
   if (filters.category) query.category = filters.category;

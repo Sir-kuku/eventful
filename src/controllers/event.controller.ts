@@ -13,12 +13,9 @@ export const createEvent = async (req: Request, res: Response, next: NextFunctio
 
 export const getAllEvents = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { category, location, search, is_active } = req.query;
+    const { category, location, search, is_active, page, limit } = req.query;
     
-    // ? PERMANENT FIX: Directly cast from source to bypass union types
-    const limit = Number(req.query.limit as string) || 10;
-    const page = Number(req.query.page as string) || 1;
-
+    // ? PERFECT FIX: String() converts ANY Express query type to a string, no type errors.
     const filters = {
       category: String(category || ''),
       location: String(location || ''),
@@ -26,7 +23,10 @@ export const getAllEvents = async (req: Request, res: Response, next: NextFuncti
       is_active: String(is_active || '')
     };
 
-    const result = await eventService.getAllEvents(filters, limit, page);
+    const limitNum = Number(String(limit)) || 10;
+    const pageNum = Number(String(page)) || 1;
+
+    const result = await eventService.getAllEvents(filters, limitNum, pageNum);
 
     res.status(200).json({
       statusCode: 200,
@@ -39,7 +39,8 @@ export const getAllEvents = async (req: Request, res: Response, next: NextFuncti
 
 export const getEventById = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    // ? req.params.id is always a string, but TS wrongly infers it as string|string[]. Explicit cast fixes it.
+    const id = req.params.id as string;
     const event = await eventService.getEventById(id);
     if (!event) return next(new ApiError(404, 'Event not found'));
 
@@ -50,7 +51,7 @@ export const getEventById = async (req: Request, res: Response, next: NextFuncti
 
 export const updateEvent = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const user = (req as any).user;
     const event = await eventService.updateEvent(id, user._id, req.body);
     if (!event) return next(new ApiError(404, 'Event not found or you are not the owner'));
@@ -60,7 +61,7 @@ export const updateEvent = async (req: Request, res: Response, next: NextFunctio
 
 export const deleteEvent = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const user = (req as any).user;
     const event = await eventService.deleteEvent(id, user._id);
     if (!event) return next(new ApiError(404, 'Event not found or you are not the owner'));
