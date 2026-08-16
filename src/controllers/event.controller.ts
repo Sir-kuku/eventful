@@ -22,10 +22,11 @@ export const getAllEvents = async (req: Request, res: Response, next: NextFuncti
       is_active: String(is_active || '')
     };
 
+    // ? FIXED: Use String() to safely flatten union types
     const result = await eventService.getAllEvents(
       filters,
-      Number(limit as string) || 10, // ? Explicit string cast
-      Number(page as string) || 1    // ? Explicit string cast
+      Number(String(limit)) || 10,
+      Number(String(page)) || 1
     );
 
     res.status(200).json({
